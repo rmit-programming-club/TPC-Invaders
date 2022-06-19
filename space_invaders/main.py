@@ -1,6 +1,4 @@
-from glob import glob
 import random
-from pygame.locals import *
 import pygame
 import time
 
