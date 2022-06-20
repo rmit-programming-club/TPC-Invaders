@@ -254,7 +254,6 @@ class App():
 			self.spaceship.update(self.dt, time_now)
 		else:
 			if pygame.key.get_pressed()[pygame.K_SPACE]:
-				print("You're cringe")
 				self.on_reset()
 
 		self.bullet_group.update(self.dt, time_now)

@@ -7,6 +7,54 @@ SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60
 
 
+spaceship_group = pygame.sprite.Group()
+
+#create spaceship class
+class Spaceship(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.load_sprites()
+    self.image = self.player_sprite_n
+    self.rect = self.image.get_rect()
+    self.rect.center = [x, y]
+    self.last_shot = pygame.time.get_ticks()
+    
+  def load_sprites(self):
+    #Load the sprite sheet
+    self.sprites = pygame.image.load("sprites/Player_ship (16 x 16).png").convert_alpha()
+    #Get the individual sprites
+    self.player_sprite_n = self.sprites.subsurface((16, 0,16,16))
+    self.player_sprite_r = self.sprites.subsurface((32,0,16,16))
+    self.player_sprite_l = self.sprites.subsurface((0,0,16,16))
+      #scale the sprites
+    self.player_sprite_n = pygame.transform.scale(self.player_sprite_n, (32, 32))
+    self.player_sprite_r = pygame.transform.scale(self.player_sprite_r, (32, 32))
+    self.player_sprite_l = pygame.transform.scale(self.player_sprite_l, (32, 32))
+
+  # Call every game update
+  def update(self, dt, time_now):
+    #set movement speed
+    speed = 250
+    #set a cooldown variable
+    cooldown = 500 #milliseconds
+    dx = 0
+
+    #get key press for movement
+    key = pygame.key.get_pressed()
+    if key[pygame.K_LEFT] and self.rect.left > 0:
+      dx = -1 #Set the direction delta
+      self.image = self.player_sprite_l # Set the Sprite
+    elif key[pygame.K_RIGHT] and self.rect.right < WIDTH:
+      dx = 1 #Set the direction delta
+      self.image = self.player_sprite_r # Set the Sprite
+    else:
+      dx = 0 #Set the direction delta
+      self.image = self.player_sprite_n # Set the Sprite
+
+    # Move the ship
+    self.rect.x += dx * speed * dt
+
+
 class Level():
 
   def __init__(self):
@@ -66,6 +114,10 @@ class App:
       self._running = True
       # Create the level
       self.level = Level()
+      # Create the spaceship
+      ship = Spaceship(WIDTH/2, HEIGHT-64)
+      self.spaceship_group = spaceship_group
+      self.spaceship_group.add(ship)
     
 
       
@@ -74,15 +126,20 @@ class App:
          self._running = False
     
     def on_loop(self):
-      self.time_now = pygame.time.get_ticks()
+      self.clock.tick(FPS)
+      self.now = time.time()
+      self.dt = self.now - self.prev_time
+      self.prev_time = self.now
+      self.time_now = pygame.time.get_ticks();
 
+      self.spaceship_group.update(self.dt, self.time_now)
       self.level.on_loop(self.time_now)
 
     def on_render(self):
       #create a temp buffer
       temp_buffer = pygame.surface.Surface((WIDTH, HEIGHT))
       temp_buffer.blit(*self.level.get_surface())
-      
+      self.spaceship_group.draw(temp_buffer)
       #Scale the buffer
       temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
       #blit it to the display surface

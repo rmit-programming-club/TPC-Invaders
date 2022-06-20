@@ -1,0 +1,148 @@
+#+TITLE: Pygame Workshop part 3
+
+* The spaceship...
+okay full discloser, this is the most complicated part so far. So first lets take a look
+#+BEGIN_SRC python
+
+  #create spaceship class
+  class Spaceship(pygame.sprite.Sprite):
+    def __init__(self, x, y, health):
+      pygame.sprite.Sprite.__init__(self)
+      self.load_sprites()
+      self.image = self.player_sprite_n
+      self.rect = self.image.get_rect()
+      self.rect.center = [x, y]
+      self.last_shot = pygame.time.get_ticks()
+		
+
+      # Shooting Sound
+      self.shoot_sound = pygame.mixer.Sound('sounds/laser_shot.wav')
+
+    def load_sprites(self):
+      #Load the sprite sheet
+      self.sprites = pygame.image.load("sprites/Player_ship (16 x 16).png").convert_alpha()
+      #Get the individual sprites
+      self.player_sprite_n = self.sprites.subsurface((16, 0,16,16))
+      self.player_sprite_r = self.sprites.subsurface((32,0,16,16))
+      self.player_sprite_l = self.sprites.subsurface((0,0,16,16))
+        #scale the sprites
+      self.player_sprite_n = pygame.transform.scale(self.player_sprite_n, (32, 32))
+      self.player_sprite_r = pygame.transform.scale(self.player_sprite_r, (32, 32))
+      self.player_sprite_l = pygame.transform.scale(self.player_sprite_l, (32, 32))
+
+    # Call every game update
+    def update(self, dt, time_now):
+      #set movement speed
+      speed = 250
+      #set a cooldown variable
+      cooldown = 500 #milliseconds
+      dx = 0
+
+      #get key press for movement
+      key = pygame.key.get_pressed()
+      if key[pygame.K_LEFT] and self.rect.left > 0:
+        dx = -1 #Set the direction delta
+        self.image = self.player_sprite_l # Set the Sprite
+      elif key[pygame.K_RIGHT] and self.rect.right < WIDTH:
+        dx = 1 #Set the direction delta
+        self.image = self.player_sprite_r # Set the Sprite
+      else:
+        dx = 0 #Set the direction delta
+        self.image = self.player_sprite_n # Set the Sprite
+
+      # Move the ship
+      self.rect.x += dx * speed * dt
+#+END_SRC
+
+** pygame sprite?
+So pygame has this cool basic class called Sprite, and that handles things like drawing and collisions for us. To start with we need to make a child of this class.
+
+#+BEGIN_SRC python
+
+#create spaceship class
+class Spaceship(pygame.sprite.Sprite):
+	def __init__(self, x, y, health):
+		pygame.sprite.Sprite.__init__(self)
+		self.load_sprites()
+		self.image = self.player_sprite_n
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+		self.last_shot = pygame.time.get_ticks()
+		
+#+END_SRC
+
+As you can see from the __init__() function, we pass the self to the parent. Then we load the sprites. Lets not worry about the sprites for now as we just need to focus on the important parts. The image and the rect. These define where and how the sprite works in the game logic. When pygame.sprite.draw() is called, it renders this sprite to display based on the location of the rect.
+
+** loading the sprites
+Now we're going to make the ship look extra nice. As we can see from its sprite sheet [[./sprites/Player_ship (16 x 16).png]] there are 3 seperate sprites. So we need to seperate them into 3 usable sprites for the game
+#+BEGIN_SRC python
+   def load_sprites(self):
+      #Load the sprite sheet
+      self.sprites = pygame.image.load("sprites/Player_ship (16 x 16).png").convert_alpha()
+      #Get the individual sprites
+      self.player_sprite_n = self.sprites.subsurface((16, 0,16,16))
+      self.player_sprite_r = self.sprites.subsurface((32,0,16,16))
+      self.player_sprite_l = self.sprites.subsurface((0,0,16,16))
+        #scale the sprites
+      self.player_sprite_n = pygame.transform.scale(self.player_sprite_n, (32, 32))
+      self.player_sprite_r = pygame.transform.scale(self.player_sprite_r, (32, 32))
+      self.player_sprite_l = pygame.transform.scale(self.player_sprite_l, (32, 32))
+#+END_SRC
+So what we need to do is sperate the 3 sprites, then we can call them as we need. Also because they are so small we can use pygame to scale them in memory for us so they're big enough to see. This is a simple process but we can also use the sprite to make it look fancy
+
+** Moving the ship
+Now that we got the ship loaded, we can give it logic
+#+BEGIN_SRC python
+     def update(self, dt, time_now):
+      #set movement speed
+      speed = 250
+      #set a cooldown variable
+      cooldown = 500 #milliseconds
+      dx = 0
+
+      #get key press for movement
+      key = pygame.key.get_pressed()
+      if key[pygame.K_LEFT] and self.rect.left > 0:
+        dx = -1 #Set the direction delta
+        self.image = self.player_sprite_l # Set the Sprite
+      elif key[pygame.K_RIGHT] and self.rect.right < WIDTH:
+        dx = 1 #Set the direction delta
+        self.image = self.player_sprite_r # Set the Sprite
+      else:
+        dx = 0 #Set the direction delta
+        self.image = self.player_sprite_n # Set the Sprite
+
+      # Move the ship
+      self.rect.x += dx * speed * dt 
+#+END_SRC
+
+
+The most important thing here is the use of delta time, pygame.key.get_pressed(). This gets a key that is pressed and sets the direction based on which key is pressed. The delta time is used to scale it to real time instead of frame time, so it is framerate indapendant
+We also sawp out what the current sprite is when its moving, to give it a swaying animation while it runs
+
+
+* Now we add it to the App
+before we add it to the App, we create a global varible called 'spaceship_group'
+#+BEGIN_SRC python
+spaceship_group = pygame.sprite.Group()
+#+END_SRC
+now in App.on_init()
+#+BEGIN_SRC python
+   def on_init(self):
+      # Create the spaceship
+      ship = Spaceship(WIDTH/2, HEIGHT-64)
+      self.spaceship_group = spaceship_group
+      self.spaceship_group.add(ship)
+#+END_SRC
+
+we create the spaceship and add it to the group of spaceships. This is more used for collison data but when we run the game loop, we just run the spaceship group update and render
+
+#+BEGIN_SRC python
+  def on_render(self):
+      self.spaceship_group.draw(temp_buffer)
+
+  def on_loop(self):
+      self.spaceship_group.update(self.dt, self.time_now)
+#+END_SRC 
+
+which will then render each object in the group, and then run the game logic for it

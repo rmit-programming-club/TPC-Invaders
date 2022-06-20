@@ -1,0 +1,87 @@
+#+TITLE: Pygame Workshop part 3
+
+* The spaceship...
+okay full discloser, this is the most complicated part so far. So first lets take a look
+#+BEGIN_SRC python
+
+  #create spaceship class
+  class Spaceship(pygame.sprite.Sprite):
+    def __init__(self, x, y, health):
+      pygame.sprite.Sprite.__init__(self)
+      self.load_sprites()
+      self.image = self.player_sprite_n
+      self.rect = self.image.get_rect()
+      self.rect.center = [x, y]
+      self.last_shot = pygame.time.get_ticks()
+		
+
+      # Shooting Sound
+      self.shoot_sound = pygame.mixer.Sound('sounds/laser_shot.wav')
+
+    def load_sprites(self):
+      #Load the sprite sheet
+      self.sprites = pygame.image.load("sprites/Player_ship (16 x 16).png").convert_alpha()
+      #Get the individual sprites
+      self.player_sprite_n = self.sprites.subsurface((16, 0,16,16))
+      self.player_sprite_r = self.sprites.subsurface((32,0,16,16))
+      self.player_sprite_l = self.sprites.subsurface((0,0,16,16))
+        #scale the sprites
+      self.player_sprite_n = pygame.transform.scale(self.player_sprite_n, (32, 32))
+      self.player_sprite_r = pygame.transform.scale(self.player_sprite_r, (32, 32))
+      self.player_sprite_l = pygame.transform.scale(self.player_sprite_l, (32, 32))
+
+    # Call every game update
+    def update(self, dt, time_now):
+      #set movement speed
+      speed = 250
+      #set a cooldown variable
+      cooldown = 500 #milliseconds
+      dx = 0
+
+      #get key press for movement
+      key = pygame.key.get_pressed()
+      if key[pygame.K_LEFT] and self.rect.left > 0:
+        dx = -1 #Set the direction delta
+        self.image = self.player_sprite_l # Set the Sprite
+      elif key[pygame.K_RIGHT] and self.rect.right < WIDTH:
+        dx = 1 #Set the direction delta
+        self.image = self.player_sprite_r # Set the Sprite
+      else:
+        dx = 0 #Set the direction delta
+        self.image = self.player_sprite_n # Set the Sprite
+
+      # On Space press create bullet at position
+      if key[pygame.K_SPACE] and time_now - self.last_shot > cooldown:
+        #Add Bullet to sprite group 
+        bullet = Bullet(self.rect.centerx, self.rect.top)
+        bullet_group.add(bullet)
+
+        # Play laser shot sound
+        self.shoot_sound.play()
+        self.last_shot = time_now
+
+      # Move the ship
+      self.rect.x += dx * speed * dt
+#+END_SRC
+
+** pygame sprite?
+So pygame has this cool basic class called Sprite, and that handles things like drawing and collisions for us. To start with we need to make a child of this class.
+
+#+BEGIN_SRC python
+
+#create spaceship class
+class Spaceship(pygame.sprite.Sprite):
+	def __init__(self, x, y, health):
+		pygame.sprite.Sprite.__init__(self)
+		self.load_sprites()
+		self.image = self.player_sprite_n
+		self.rect = self.image.get_rect()
+		self.rect.center = [x, y]
+		self.last_shot = pygame.time.get_ticks()
+		
+#+END_SRC
+
+As you can see from the __init__() function, we pass the self to the parent. Then we load the sprites. Lets not worry about the sprites for now as we just need to focus on the important parts. The image and the rect. These define where and how the sprite works in the game logic. When pygame.sprite.draw() is called, it renders this sprite to display based on the location of the rect.
+
+** loading the sprites
+Now we're going to make the ship look extra nice. As we can see from its sprite sheet [[./sprites/sprites/Player_ship (16 x 16).png]
