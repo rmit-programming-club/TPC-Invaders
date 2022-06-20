@@ -4,7 +4,7 @@ import time
 
 
 WIDTH, HEIGHT = 480, 640
-SCALE = 1.5
+SCALE = 1
 SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60
 
@@ -27,9 +27,6 @@ class Spaceship(pygame.sprite.Sprite):
     self.rect.center = [x, y]
     self.last_shot = pygame.time.get_ticks()
     
-
-    # Shooting Sound
-    self.shoot_sound = pygame.mixer.Sound('sounds/laser_shot.wav')
 
   def load_sprites(self):
     #Load the sprite sheet
@@ -69,8 +66,6 @@ class Spaceship(pygame.sprite.Sprite):
       bullet = Bullet(self.rect.centerx, self.rect.top)
       bullet_group.add(bullet)
 
-      # Play laser shot sound
-      self.shoot_sound.play()
       self.last_shot = time_now
 
     # Move the ship
@@ -85,7 +80,6 @@ class Alien(pygame.sprite.Sprite):
     self.speed = speed
     self.dir = dir
     self.timer = 0
-    self.sound = pygame.mixer.Sound('sounds/alien_shot.wav')
 
 
   def load_sprite(self):
@@ -111,7 +105,6 @@ class Alien(pygame.sprite.Sprite):
       #print("SPRITE CAHNGE")
       if random.random() < 0.025:
         bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
-        self.sound.play()
       self.image = self.sprites[self.image_index]
       self.timer = time_now 
 
@@ -154,6 +147,7 @@ class Alien_Bullet(pygame.sprite.Sprite):
       self.kill()
       global GAME_OVER
       GAME_OVER = True
+      print("HIT")
 
 
 class Level():
@@ -166,13 +160,14 @@ class Level():
     self.background_b = self.create_surface(background_b, background_a)
     self.timer = 0
     
+
   def create_aliens(self,rows, cols, alien_group):
     for row in range(rows):
       for item in range(cols):
         alien = Alien(80 + item * 64, 100 + row * 64)
         alien_group.add(alien)
     return alien_group
-
+    
   def create_surface(self, a, b):
     self.surface = pygame.Surface((WIDTH,HEIGHT))
     for y in range(0, int(HEIGHT/64) + 64):
@@ -289,8 +284,6 @@ class App():
   def on_execute(self):
     if self.on_init() == False:
       self._running = False
-    self.music = pygame.mixer.Sound('sounds/music.wav')
-    self.music.play()
 
     while ( self._running ):
       for event in pygame.event.get():

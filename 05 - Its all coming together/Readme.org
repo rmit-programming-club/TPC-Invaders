@@ -1,0 +1,68 @@
+#+TITLE: Pygame Workshop part 5
+
+* The Bullet Classes
+#+BEGIN_SRC python
+class Bullet(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.image = pygame.image.load('sprites/Player_beam (16 x 16).png')
+    self.image = pygame.transform.scale(self.image, (32,32))
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.speed = 500
+
+  def update(self, dt, time_now):
+    self.rect.y -= self.speed * dt
+
+    if self.rect.y <= -5:
+      self.kill()
+    if pygame.sprite.spritecollide(self, alien_group, True):
+      self.kill()
+      print("HIT")
+
+class Alien_Bullet(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.load_sprite()
+    self.image = pygame.transform.scale(self.image, (32, 32))
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.speed = 500
+
+  def load_sprite(self):
+    sprite_sheet = pygame.image.load('sprites/Enemy_projectile (16 x 16).png')
+    self.image = sprite_sheet;
+  def update(self, dt, time_now):
+    self.rect.y += self.speed * dt
+
+    if self.rect.y >= HEIGHT:
+      self.kill()
+    if pygame.sprite.spritecollide(self, player_group, True):
+      self.kill()
+      global GAME_OVER
+      GAME_OVER = True
+#+END_SRC
+
+As we can see these two classes are basic pygame sprites, that jsut have the instructions to move up, and move down. The main difference is that when the Alien Bullet hits the player, it changes the Global flag GAME_OVER
+
+** Make the player fire
+In the Spaceship class in update(), we add a condition that checks if the space button is pressed, this creates a bullet at the players location that then starts heading up
+#+BEGIN_SRC python
+     # On Space press create bullet at position
+if key[pygame.K_SPACE] and time_now - self.last_shot > cooldown:
+      #Add Bullet to sprite group 
+      bullet = Bullet(self.rect.centerx, self.rect.top)
+      bullet_group.add(bullet)
+
+      self.last_shot = time_now 
+#+END_SRC
+
+** Make the Enemies fire
+In the Enemy update() function, we add a random call
+
+#+BEGIN_SRC python
+      if random.random() < 0.025:
+        bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
+      self.image = self.sprites[self.image_index]
+      self.timer = time_now 
+#+END_SRC

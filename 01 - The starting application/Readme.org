@@ -1,5 +1,8 @@
 #+TITLE: Pygame Workshop part 1
 
+
+*LINK*: https://github.com/rmit-programming-club/TPC-Invaders
+
 * Pygame?
 Pygame is a cross-platform set of Python modules designed for writing video games. It includes computer graphics and sound libraries designed to be used with the Python programming language.
 
