@@ -39,7 +39,6 @@ class Level():
     return (self.background_a, (0,0))
 
   def on_loop(self, time_now):
-    print(time_now - self.timer)
     if time_now - self.timer > 1500:
       self.timer = time_now
       self.background_a, self.background_b = self.background_b, self.background_a

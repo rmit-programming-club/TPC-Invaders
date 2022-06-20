@@ -1,9 +1,10 @@
 import random
 import pygame
 import time
+import math
 
 
-WIDTH, HEIGHT = 480, 640
+WIDTH, HEIGHT = 580, 640
 SCALE = 1
 SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60
@@ -98,20 +99,21 @@ class Alien(pygame.sprite.Sprite):
 
   def update(self, dt, time_now):
 
-    if time_now - self.timer >= 300:
+    if time_now - self.timer >= 300: 
       self.image_index += 1
       if self.image_index >= len(self.sprites):
         self.image_index = 0
       #print("SPRITE CAHNGE")
-      if random.random() < 0.025:
+      if random.random() < 0.005:
         bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
       self.image = self.sprites[self.image_index]
       self.timer = time_now 
+      self.rect.x += self.dir * 16
 
 class Bullet(pygame.sprite.Sprite):
   def __init__(self, x, y):
     pygame.sprite.Sprite.__init__(self)
-    self.image = pygame.image.load('sprites/Player_beam (16 x 16).png')
+    self.image = pygame.image.load('sprites/Player_beam (16 x 16).png').convert_alpha()
     self.image = pygame.transform.scale(self.image, (32,32))
     self.rect = self.image.get_rect()
     self.rect.center = [x,y]
@@ -136,7 +138,7 @@ class Alien_Bullet(pygame.sprite.Sprite):
     self.speed = 500
 
   def load_sprite(self):
-    sprite_sheet = pygame.image.load('sprites/Enemy_projectile (16 x 16).png')
+    sprite_sheet = pygame.image.load('sprites/Enemy_projectile (16 x 16).png').convert_alpha()
     self.image = sprite_sheet;
   def update(self, dt, time_now):
     self.rect.y += self.speed * dt
@@ -161,7 +163,7 @@ class Level():
     self.timer = 0
     
 
-  def create_aliens(self,rows, cols, alien_group):
+  def create_aliens(self, rows, cols, alien_group):
     for row in range(rows):
       for item in range(cols):
         alien = Alien(80 + item * 64, 100 + row * 64)
@@ -225,7 +227,8 @@ class App():
     self.bullet_group = bullet_group
     self.alien_group = alien_group
 
-    self.alien_group = self.level.create_aliens(6,6,self.alien_group)
+    self.alien_group = self.level.create_aliens(6, 6, self.alien_group)
+
   # Handle events
   def on_event(self, event):
     if event.type == pygame.QUIT:
@@ -235,7 +238,6 @@ class App():
   def on_loop(self):
     global GAME_OVER
     self.clock.tick(FPS)
-    print(self.clock.get_fps())
     self.now = time.time()
     self.dt = self.now - self.prev_time
     self.prev_time = self.now
@@ -252,7 +254,12 @@ class App():
     self.bullet_group.update(self.dt, time_now)
     self.alien_group.update(self.dt, time_now)
 
-
+    alien_hit_edge = any(a.rect.x > WIDTH - a.rect.width or a.rect.x <= 0 for a in self.alien_group)
+    if alien_hit_edge:
+      for alien in self.alien_group:
+        alien.rect.x -= alien.dir * 16
+        alien.dir = -alien.dir
+        alien.rect.y += 16
     
     if len(alien_group) == 0:
       GAME_OVER = True
