@@ -8,6 +8,7 @@ FPS = 60
 
 
 spaceship_group = pygame.sprite.Group()
+alien_group = pygame.sprite.Group()
 
 #create spaceship class
 class Spaceship(pygame.sprite.Sprite):
@@ -55,6 +56,41 @@ class Spaceship(pygame.sprite.Sprite):
     self.rect.x += dx * speed * dt
 
 
+class Alien(pygame.sprite.Sprite):
+  def __init__(self, x, y, dir=1, speed=5):
+    pygame.sprite.Sprite.__init__(self)
+    self.load_sprite()
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.speed = speed
+    self.dir = dir
+    self.timer = 0
+
+
+  def load_sprite(self):
+    self.image_sheet = pygame.image.load("sprites/Alan (16 x 16).png").convert_alpha()
+    self.dir = 1
+    self.sprites = []
+    self.sprites.append(self.image_sheet.subsurface((48,0,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((64,0,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((80,0,16,16)))
+
+    for i in range(len(self.sprites)):
+      self.sprites[i] = pygame.transform.scale(self.sprites[i], (32,32))
+
+    self.image = self.sprites[0]
+    self.image_index = 0
+
+  def update(self, dt, time_now):
+
+    if time_now - self.timer >= 300:
+      self.image_index += 1
+      if self.image_index >= len(self.sprites):
+        self.image_index = 0
+      self.image = self.sprites[self.image_index]
+      self.timer = time_now 
+
+
 class Level():
 
   def __init__(self):
@@ -65,6 +101,13 @@ class Level():
     self.background_b = self.create_surface(background_b, background_a)
     self.timer = 0
     
+  def create_aliens(self,rows, cols, alien_group):
+    for row in range(rows):
+      for item in range(cols):
+        alien = Alien(80 + item * 64, 100 + row * 64)
+        alien_group.add(alien)
+    return alien_group
+
 
   def create_surface(self, a, b):
     self.surface = pygame.Surface((WIDTH,HEIGHT))
@@ -117,6 +160,9 @@ class App:
       ship = Spaceship(WIDTH/2, HEIGHT-64)
       self.spaceship_group = spaceship_group
       self.spaceship_group.add(ship)
+      # Create the aliens
+      self.alien_group = alien_group
+      self.alien_group = self.level.create_aliens(6, 6, self.alien_group)
     
 
       
@@ -132,13 +178,16 @@ class App:
       self.time_now = pygame.time.get_ticks();
 
       self.spaceship_group.update(self.dt, self.time_now)
+      self.alien_group.update(self.dt, self.time_now)
       self.level.on_loop(self.time_now)
+
 
     def on_render(self):
       #create a temp buffer
       temp_buffer = pygame.surface.Surface((WIDTH, HEIGHT))
       temp_buffer.blit(*self.level.get_surface())
       self.spaceship_group.draw(temp_buffer)
+      self.alien_group.draw(temp_buffer)
       #Scale the buffer
       temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
       #blit it to the display surface

@@ -179,13 +179,6 @@ class Level():
 
 		self.surface.blit(self.background, (0,0))
 		return self.surface
-
-	def create_aliens(self,rows, cols, alien_group):
-		for row in range(rows):
-			for item in range(cols):
-				alien = Alien(80 + item * 64, 100 + row * 64)
-				alien_group.add(alien)
-		return alien_group
 	
 	def get_surface(self):
 		return (self.background_a, (0,0))

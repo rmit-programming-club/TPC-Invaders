@@ -1,0 +1,93 @@
+#+TITLE: Pygame Workshop part 4
+
+* The Enemy class
+The enemy class is a lot like the spaceship class, the only major being the logic when it updates
+#+BEGIN_SRC python
+class Alien(pygame.sprite.Sprite):
+	def __init__(self, x, y, dir=1, speed=5):
+		pygame.sprite.Sprite.__init__(self)
+		self.load_sprite()
+		self.rect = self.image.get_rect()
+		self.rect.center = [x,y]
+		self.speed = speed
+		self.dir = dir
+		self.timer = 0
+
+
+	def load_sprite(self):
+		self.image_sheet = pygame.image.load("sprites/Alan (16 x 16).png").convert_alpha()
+		self.dir = 1
+		self.sprites = []
+		self.sprites.append(self.image_sheet.subsurface((48,0,16,16)))
+		self.sprites.append(self.image_sheet.subsurface((64,0,16,16)))
+		self.sprites.append(self.image_sheet.subsurface((80,0,16,16)))
+
+		for i in range(len(self.sprites)):
+			self.sprites[i] = pygame.transform.scale(self.sprites[i], (32,32))
+
+		self.image = self.sprites[0]
+		self.image_index = 0
+
+	def update(self, dt, time_now):
+
+		if time_now - self.timer >= 300:
+			self.image_index += 1
+			if self.image_index >= len(self.sprites):
+				self.image_index = 0
+			#print("SPRITE CAHNGE")
+			if random.random() < 0.025:
+				bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
+				self.sound.play()
+			self.image = self.sprites[self.image_index]
+			self.timer = time_now 
+#+END_SRC
+
+** The Logic
+#+BEGIN_SRC python
+def load_sprite(self):
+		self.image_sheet = pygame.image.load("sprites/Alan (16 x 16).png").convert_alpha()
+		self.dir = 1
+		self.sprites = []
+		self.sprites.append(self.image_sheet.subsurface((48,0,16,16)))
+		self.sprites.append(self.image_sheet.subsurface((64,0,16,16)))
+		self.sprites.append(self.image_sheet.subsurface((80,0,16,16)))
+
+		for i in range(len(self.sprites)):
+			self.sprites[i] = pygame.transform.scale(self.sprites[i], (32,32))
+
+		self.image = self.sprites[0]
+		self.image_index = 0
+
+
+#+END_SRC
+
+When we look at the sprite sheet, we see [[./sprites/Alan (16 x 16).png]] there are a number of sprites, so we use load_sprites to seperate them
+
+#+BEGIN_SRC python
+ def update(self, dt, time_now):
+		if time_now - self.timer >= 300:
+			self.image_index += 1
+			if self.image_index >= len(self.sprites):
+				self.image_index = 0
+			self.image = self.sprites[self.image_index]
+			self.timer = time_now 
+#+END_SRC
+All we do with this logic is swap between the different sprites in the Alien, this makes the enemies look good when the actual game is running
+
+** But how do we add them to the level
+in the level class, we add a function called create_aliens(row,cols, group)
+#+BEGIN_SRC python
+def create_aliens(self,rows, cols, alien_group):
+	  for row in range(rows):
+		  for item in range(cols):
+			  alien = Alien(80 + item * 64, 100 + row * 64)
+				alien_group.add(alien)
+	  return alien_group
+#+END_SRC
+This adds aliens to our Alien group in the application when we call it in on_init
+#+BEGIN_SRC python
+  def on_init(self):
+      self.level.create_aliens(6,6)
+#+END_SRC
+
+and now when we 
