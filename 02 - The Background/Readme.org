@@ -1,0 +1,159 @@
+#+TITLE: Pygame Workshop part 2
+
+* Now we need a level...
+
+Now that we have a basic pygame setup, its time to make a background level for us to actually look at. The one we'll be making for this should look like this
+[[./background.png]]
+But even cooler, because it will be animated!
+
+* The Level class
+
+So now we're onto some actual code (AHOY!). But first lets see what the full class looks like!
+
+#+BEGIN_SRC python
+  
+class Level():
+
+  def __init__(self):
+    self.background = pygame.image.load("sprites/Space_BG (2 frames) (64 x 64).png").convert_alpha()
+    background_a = self.background.subsurface((0,0, 64, 64))
+    background_b = self.background.subsurface((64,0, 64, 64))
+    self.background_a = self.create_surface(background_a, background_b)
+    self.background_b = self.create_surface(background_b, background_a)
+    self.timer = 0
+    
+
+  def create_surface(self, a, b):
+    self.surface = pygame.Surface((WIDTH,HEIGHT))
+    for y in range(0, int(HEIGHT/64) + 64):
+      for x in range(0, int(WIDTH/64) + 64):
+        if x * y % 2 == 0:
+          self.surface.blit(pygame.transform.rotate(a, 90 * x), (x * 64, y*64))
+        else:
+          self.surface.blit(pygame.transform.rotate(b, 90 * x), (x * 64, y*64))
+
+    self.surface.blit(self.background, (0,0))
+    return self.surface
+  
+  def get_surface(self):
+    return (self.background_a, (0,0))
+
+  def on_loop(self, time_now):
+    print(time_now - self.timer)
+    if time_now - self.timer > 1500:
+      self.timer = time_now
+      self.background_a, self.background_b = self.background_b, self.background_a
+
+#+END_SRC
+
+** HUH?
+Yeah thats a lot of code isn't it. Kinda scary if you don't know what you're looking at. The good news is that we can break it down simply.
+
+
+** __init__() again
+#+BEGIN_SRC python
+  def __init__(self):
+   #Load the background spirte
+   self.background = pygame.image.load("sprites/Space_BG (2 frames) (64 x 64).png").convert_alpha()
+   #Create tiles from the background
+   background_a = self.background.subsurface((0,0, 64, 64))
+   background_b = self.background.subsurface((64,0, 64, 64))
+   #Now create full slabs the size of our window
+   self.background_a = self.create_surface(background_a, background_b)
+   self.background_b = self.create_surface(background_b, background_a)
+   self.timer = 0 
+#+END_SRC
+
+The first thing we do is load the sprite sheet
+[[../sprites/Space_BG (2 frames) (64 x 64).png]]
+This is made up of two sprites that we can slice using the subsurface command of pygame. Thes two sprites make an animation of the stars twilking. Now if we just did this as it is it will look obviously tiled. So we go onto create_surface(a,b) to create an interesting pattern
+
+*** create_surface(a,b)
+
+#+BEGIN_SRC python
+    def create_surface(self, a, b):
+    self.surface = pygame.Surface((WIDTH,HEIGHT))
+    for y in range(0, int(HEIGHT/64) + 64):
+      for x in range(0, int(WIDTH/64) + 64):
+        if x * y % 2 == 0:
+          self.surface.blit(pygame.transform.rotate(a, 90 * x), (x * 64, y*64))
+        else:
+          self.surface.blit(pygame.transform.rotate(b, 90 * x), (x * 64, y*64))
+
+    self.surface.blit(self.background, (0,0))
+    return self.surface
+#+END_SRC
+
+Pygame can handle background transformations for us, which allows us to scale (which we will be abusing later), move and most importantly for this section. Rotate our images. For this what we are going to do is every tile, we rotate it 90 degrees. Why? To make a much more interesting pattern than before, with each other tile also using the other frame of the animation. This adds variety in our background without adding much extra overhead, as the background surface is stored into memory without having to do any of this maniplation again during runtime.
+* Adding the level to our App()
+
+Now that we've made a background, we need to add it to our App object.
+
+** on_init()
+#+BEGIN_SRC python
+   def on_init(self):
+      pygame.init()
+      self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+      self._running = True
+      # Create the level
+      self.level = Level()
+
+#+END_SRC
+
+The only change we have right now is that we actually create an instance of the level in the application.
+
+** rendering the damn thing
+If we go back to our level object we can see this function
+
+#+BEGIN_SRC python
+  def get_surface(self):
+    return (self.background_a, (0,0))
+#+END_SRC
+
+That returns a tuple. Now we get to see how we're actually going to render our app
+
+*** on_render()
+
+#+BEGIN_SRC python
+  def on_render(self):
+     #create a temp buffer
+     temp_buffer = pygame.surface.Surface((WIDTH, HEIGHT))
+     temp_buffer.blit(*self.level.get_surface())
+     #scale the buffer
+     temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
+     #blit it to the display surface
+     self._display_surf.blit(temp_buffer,(0,0))
+     #update the actual pygame display
+     pygame.display.update()
+#+END_SRC
+
+Wow this is a lot more than it was before. But it is still fairly simple. We create a temp buffer just to live in our code for the execution of this function each cycle, then we blit the surface, and unpack the tuple, which as we know looks like this
+#+BEGIN_SRC python
+  (surface, 0, 0)
+#+END_SRC
+that way we just have to pass this one command to the blit function. After we've blitted it to the surface we can scale it if there is any difference between the internal resolution and the resolution we want displayed and blit it to the actual display surface. Now we just update the python display and bam, we have a background layer in our pygame.
+
+** Now we animate it
+Now how the hell do we animate it, well if we go back to init you'll see I actually created two backgrounds
+#+BEGIN_SRC python
+    self.background_a = self.create_surface(background_a, background_b)
+    self.background_b = self.create_surface(background_b, background_a)
+#+END_SRC
+This just alternates the order we use for our surface. Which creates a nice and simple animation effect with our background
+*** on_loop()
+Now we go to App.on_loop() and add two lines, we create a time instance that gets the current ticks from pygame, and then call level.on_loop(self.time_now())
+#+BEGIN_SRC python
+    def on_loop(self):
+      self.time_now = pygame.time.get_ticks()
+
+      self.level.on_loop(self.time_now)
+
+#+END_SRC
+And then, we just have a simple counter in our level, which counts the ticks and every time it hits a threshold, swaps the surfaces
+#+BEGIN_SRC python
+   def on_loop(self, time_now):
+    if time_now - self.timer > 1500:
+      self.timer = time_now
+      self.background_a, self.background_b = self.background_b, self.background_a 
+#+END_SRC
+Which creates our pretty little twinkling effect

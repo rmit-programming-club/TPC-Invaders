@@ -1,0 +1,157 @@
+#+TITLE: Pygame Workshop part 1
+
+* Pygame?
+Pygame is a cross-platform set of Python modules designed for writing video games. It includes computer graphics and sound libraries designed to be used with the Python programming language.
+
+
+
+** But how do you use pygame?
+
+If you have python3 installed (as to how you do this depends on your OS and development stack), you simply have to type this command
+#+BEGIN_SRC bash
+pip install pygame
+#+END_SRC
+
+
+* Our actual application
+Here is an outline of a basic pygame base that we are going to use for this project
+
+#+BEGIN_SRC python
+  import pygame
+  WIDTH, HEIGHT = 480, 640
+  SCALE = 1
+  SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
+  FPS = 60
+
+
+  class App:
+
+        def __init__(self):
+            # Clock for FPS limiting
+            self.clock = pygame.time.Clock()
+
+            # Time for delta time
+            self.dt = 0
+            self.prev_time = time.time()
+            global GAME_OVER
+            GAME_OVER = False
+
+            # Pygame varibles
+            self.running = True
+            self._display_surf = None
+            self.size = self.weight, self.height = SCALE_WIDTH, SCALE_HEIGHT
+
+
+         def on_init(self):
+             pygame.init()
+             self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+             self._running = True
+
+         def on_event(self, event):
+             if event.type == pygame.QUIT:
+                 self._running = False
+         def on_loop(self):
+             pass
+         def on_render(self):
+             pass
+         def on_cleanup(self):
+             pygame.quit()
+
+         def on_execute(self):
+             if self.on_init() == False:
+                 self._running = False
+
+             while( self._running ):
+                 for event in pygame.event.get():
+                      self.on_event(event)
+                 self.on_loop()
+                 self.on_render()
+             self.on_cleanup()
+
+     if __name__ == "__main__" :
+         theApp = App()
+         theApp.on_execute()
+#+END_SRC
+
+This might seem complicated, but we can break it down into chunks in order of execution to show how it works
+
+
+** The Constant Varibles
+To make the game logic easier to manage, we have a bunch of constant varibles that are not changed throughout the entire runtime of the application.
+#+BEGIN_SRC python
+  WIDTH, HEIGHT = 480, 640
+  SCALE = 1
+  SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
+  FPS = 60
+#+END_SRC
+As we continue, it will be much more apparent what these varibles do but the most confusing are SCALE, SCALE_WIDTH, SCALE_HEIGHT. These are just constants that allow us to run the game with a single set of logic while allowing us to scale the viewport easily
+
+** if name?
+This part might seem confusing if you haven't used python before or are new to python, but if you are coming from java think of this as the main function
+#+BEGIN_SRC python
+  if __name__ == "__main__":
+      theApp = App()
+      theApp.on_execute()
+#+END_SRC
+The if __name__ == "__main__: part of this command checks if this python script is being run on its own, or being called from an external script or shell. This is simply to make sure that the script is being executed correctly as to not create any errors down the line. In this section, it just creates a new A new App Object, and then runs the on_execute() function
+
+* The App() Class
+** App.__init__()
+Now we get into the actual logic
+#+BEGIN_SRC python
+	def __init__(self):
+		# Clock for FPS limiting
+		self.clock = pygame.time.Clock()
+		# Time for delta time
+		self.dt = 0
+		self.prev_time = time.time()
+		GAME_OVER = False
+		# Pygame varibles
+		self.running = True
+		self._display_surf = None
+		self.size = self.weight, self.height = SCALE_WIDTH, SCALE_HEIGHT
+
+#+END_SRC
+For anyone who isn't familiar with pygame, the pygame.time.Clock() funtion might be confusing, but that allows us to slow down our game to match an FPS. While we as Gamers all want loads of FPS, at a certain point it just becomes a waste of CPU cycles. The other important varibles we initialize are dt (Delta time), make sure our GAME_OVER flag is set to false, set the boolean running to True and create a size and display surface varible. Delta time is used to limit the game logic to real world time instead of just frame time.
+
+** App.on_execute()
+
+#+BEGIN_SRC python
+         def on_execute(self):
+             if self.on_init() == False:
+                 self._running = False
+
+             while( self._running ):
+                 for event in pygame.event.get():
+                     self.on_event(event)
+                 self.on_loop()
+                 self.on_render()
+             self.on_cleanup()
+#+END_SRC
+
+The most simple function in the App class, it just runs on_init() and makes sure it returns true. Then starts the Game Loop, which contains the on_loop() and on_render() functions, and checks pygame for events. Aftrt this it loops which keeps going while running is true
+
+** App.on_init()
+
+#+BEGIN_SRC python
+           def on_init(self):
+             pygame.init()
+             self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+             self._running = True
+#+END_SRC
+
+Another simple function, however as the application grows it'll get more complicated. The most important thing this does is create the display. This display is the actual window that the application runs in.
+
+** App.on_event(), on_loop(), on_render()
+
+#+BEGIN_SRC python
+         def on_event(self, event):
+             if event.type == pygame.QUIT:
+                 self._running = False
+         def on_loop(self):
+             pass
+         def on_render(self):
+             pass
+#+END_SRC
+
+On Event just checks if we press the close button, while on_loop() and on_render() for now have nothing in them

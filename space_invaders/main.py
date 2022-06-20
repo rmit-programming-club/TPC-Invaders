@@ -4,7 +4,7 @@ import time
 
 
 WIDTH, HEIGHT = 480, 640
-SCALE = 2
+SCALE = 1
 SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60
 
@@ -29,7 +29,7 @@ class Spaceship(pygame.sprite.Sprite):
 		
 
 		# Shooting Sound
-		self.shoot_sound = pygame.mixer.Sound('Sounds/laser_shot.wav')
+		self.shoot_sound = pygame.mixer.Sound('sounds/laser_shot.wav')
 
 	def load_sprites(self):
 		#Load the sprite sheet
@@ -63,9 +63,13 @@ class Spaceship(pygame.sprite.Sprite):
 			dx = 0 #Set the direction delta
 			self.image = self.player_sprite_n # Set the Sprite
 
+		# On Space press create bullet at position
 		if key[pygame.K_SPACE] and time_now - self.last_shot > cooldown:
+			#Add Bullet to sprite group 
 			bullet = Bullet(self.rect.centerx, self.rect.top)
 			bullet_group.add(bullet)
+
+			# Play laser shot sound
 			self.shoot_sound.play()
 			self.last_shot = time_now
 
@@ -228,7 +232,7 @@ class App():
 		self.bullet_group = bullet_group
 		self.alien_group = alien_group
 
-		self.alien_group = self.level.create_aliens(4,6,self.alien_group)
+		self.alien_group = self.level.create_aliens(6,6,self.alien_group)
 	# Handle events
 	def on_event(self, event):
 		if event.type == pygame.QUIT:

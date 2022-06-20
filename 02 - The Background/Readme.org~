@@ -1,0 +1,6 @@
+#+TITLE: Pygame Workshop part 2
+
+* Now we need a level...
+
+Now that we have a basic pygame setup, its time to make a background level for us to actually look at. The one we'll be making for this should look like this
+[[./background.png]]
